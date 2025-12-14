@@ -68,7 +68,7 @@
       git remote add origin git@github.com:berislav-vidakovic/ChatAppJn.git
       git remote -v
       ```
-    -Push code (--set-upstream the same -u flag)
+    - Push code (--set-upstream the same -u flag)
       ```bash
       git push -u origin main
       ```
@@ -118,7 +118,7 @@
   source ~/.bashrc # apply immediately
   ```
 
-- Add secure path
+- Add to secure path
   ```bash
   sudo visudo
   Defaults        secure_path="/usr/lib/postgresql/16/bin:
@@ -129,11 +129,12 @@
   sudo -u postgres pg_ctl -D /etc/postgresql/16/main -t 1 start
   ```
 
-- Create user, grant access, create database
+- Connect to PostgreSQL as super user, create database, create user and grant access 
   ```postgres
+  sudo -u postgres psql
+  CREATE DATABASE gamesdb;
   CREATE USER barry75 WITH PASSWORD 'strongPwd';
   GRANT ALL PRIVILEGES ON DATABASE gamesdb TO barry75;
-  CREATE DATABASE gamesdb;
   ```
 
 - Test external access from local bash
@@ -213,4 +214,60 @@
 
 ### 4. GraphQL healthckeck queries 
 
+- Create GraphQL schema in resources/graphql directory:
+  ```graphql
+  type Query {
+    ping: String
+  }
+  ```
 
+- Create Controller in Controller directory
+  ```java
+  package gamesjg.Controllers;
+  import org.springframework.graphql.data.method.annotation.QueryMapping;
+  import org.springframework.stereotype.Controller;
+  @Controller
+  public class PingControllerGraphQL {
+    // Method name ping() corresponds to the Query field in schema.graphqls
+    @QueryMapping
+    public String ping() {
+      return "pong";
+    }
+  }
+  ```
+
+- Add minimal Config to Config directory
+  ```java
+  package gamesjg.Config;
+  import org.springframework.context.annotation.Bean;
+  import org.springframework.context.annotation.Configuration;
+  import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+  import org.springframework.security.web.SecurityFilterChain;
+  @Configuration
+  public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+      http
+        .csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(auth -> auth.anyRequest().permitAll() )  // allow all requests
+        .httpBasic(httpBasic -> httpBasic.disable())   // disable HTTP Basic
+        .formLogin(formLogin -> formLogin.disable()); // disable login form
+      return http.build();
+    }
+  }
+  ```
+
+- Test from Postman as POST with JSON body:
+  ```json
+  {
+    "query": "{ ping }"
+  }
+  ```
+  - Response expected:
+    ```json
+    {
+      "data": {
+        "ping": "pong"
+      }
+    }
+    ```
