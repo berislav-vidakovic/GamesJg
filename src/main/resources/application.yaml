@@ -1,5 +1,13 @@
 spring:
   application:
     name: gamesjg
+  datasource:
+    url: jdbc:postgresql://barryonweb.com:5432/gamesdb
+    username: barry75
+    password: abc123
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
 server:
   port: 8083

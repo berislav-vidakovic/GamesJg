@@ -1,4 +1,21 @@
-## Java backend with GraphQL and PostreSQL
+## Java backend with GraphQL and PostgreSQL
+
+
+<div style="margin-bottom: 12px;">
+<img src = "docs/java.png" style="height:35px; margin-right: 15px;" /> 
+<img src = "docs/spring.png" style="height:35px; margin-right: 15px;" /> 
+<img src = "docs/jpa.svg" style="height:35px; margin-right: 15px;" /> 
+<img src = "docs/postgresqlb.png" style="height:35px; margin-right: 15px;" /> 
+<img src = "docs/graphql.png" style="height:35px; margin-right: 15px;" /> 
+</div>
+
+### Table of Content
+
+1. [Build project skeleton](#1-build-project-skeleton)
+2. [Install PostgreSQL, create DB and connect backend](#2-install-postgresql-create-db-and-connect-backend)
+3. [Run PostgreSQL scripts to create and populate table](#3-run-postgresql-scripts-to-create-and-populate-table)
+4. [GraphQL healthcheck queries](#4-graphql-healthckeck-queries)
+
 
 ### 1. Build project skeleton
 
@@ -46,28 +63,154 @@
       git add .
       git commit -m "Initial commit"
       ```
-    - Get Remote Repo SSH link and run
+    - Get Remote Repo SSH link, run and verify
       ```bash
       git remote add origin git@github.com:berislav-vidakovic/ChatAppJn.git
+      git remote -v
+      ```
+    -Push code (--set-upstream the same -u flag)
+      ```bash
+      git push -u origin main
       ```
 
 
-### 2. Install PostgreSQL
+### 2. Install PostgreSQL, create DB and connect backend
 
 - Install and check status
-
   ```bash
   sudo apt update
   sudo apt install postgresql postgresql-contrib
   sudo systemctl status postgresql
   ```
 
-3. Run backend
+- Enable external access, restart, verifiy is running
+  ```bash
+  sudo nano /etc/postgresql/16/main/postgresql.conf
+  listen_addresses = '*' # replace commented line #listen_addresses = 'localhost'   
+  sudo nano /etc/postgresql/16/main/pg_hba.conf  # add to end
+  host    gamesdb         barry75         0.0.0.0/0               scram-sha-256
+  sudo systemctl restart postgresql
+  sudo systemctl status postgresql
+  ```
+
+- Check all PostgreSQL services and status:
+  ```bash
+  systemctl list-units | grep postgresql
+  systemctl status postgresql@16-main # main - has to be running
+  systemctl status postgresql
+  ```
+
+- Verify listening ports:
+  ```bash
+  sudo ss -tulnp | grep 5432
+  ```
+
+- Check logs for failed service
+  ```bash
+  sudo journalctl -u postgresql@16-main.service -b
+  ```
+
+- Check Postgres binaries postgres and psql location, add to PATH and apply
+  ```bash
+  ls /usr/lib/postgresql/16/bin
+  nano ~/.bashrc  # Add line to the end
+  export PATH=/usr/lib/postgresql/16/bin:$PATH
+  source ~/.bashrc # apply immediately
+  ```
+
+- Add secure path
+  ```bash
+  sudo visudo
+  Defaults        secure_path="/usr/lib/postgresql/16/bin:
+  ```
+
+- Check config file syntax:
+  ```bash
+  sudo -u postgres pg_ctl -D /etc/postgresql/16/main -t 1 start
+  ```
+
+- Create user, grant access, create database
+  ```postgres
+  CREATE USER barry75 WITH PASSWORD 'strongPwd';
+  GRANT ALL PRIVILEGES ON DATABASE gamesdb TO barry75;
+  CREATE DATABASE gamesdb;
+  ```
+
+- Test external access from local bash
+  ```bash
+  psql -h barryonweb.com -p 5432 -U barry75 -d gamesdb
+  ```
+
+- Add connection to backend application.yaml (under spring key)
+  ```yaml
+  datasource:
+    url: jdbc:postgresql://barryonweb.com:5432/gamesdb
+    username: barry75
+    password: strongPwd!
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  ```
+
+- Run backend
 
         mvn spring-boot:run
 
-### 3. GraphQL query ping
+- For Connection OK there is JPA logs
+  ```bash
+  Initialized JPA EntityManagerFactory for persistence unit 'default'
+  ```
 
-### 4. GraphQL query pingdb
+### 3. Run PostgreSQL scripts to create and populate table
+
+- Version, verify current user and DB
+  ```bash
+  psql --version
+  ls /etc/postgresql/
+  psql -U barry75 -d gamesdb
+  SELECT current_user;
+  SELECT current_database();
+  ```
+
+- Internal and external connection
+  ```bash
+  psql -U barry75 -d gamesdb
+  psql -h barryonweb.com -p 5432 -U barry75 -d gamesdb
+  ```
+
+- Show the owner and privileges of the public schema
+  ```postgres
+  \dn+ public
+  ```
+
+- Connect as superuser to Postgres on VPS and grant priviledges to create table
+  ```bash
+  sudo -u postgres psql -d gamesdb
+  GRANT ALL PRIVILEGES ON SCHEMA public TO barry75;
+  ```
+
+- Run scripts (relative path) 
+  ```postgres
+  \i schema.sql
+  \i data.sql
+  ```
+
+- Use DB, list DBs, list users, list tables, table structure
+  ```postgres
+  \c gamesdb
+  \l
+  \du
+  \dt
+  \d healthcheck
+  ```
+
+- PostgreSQL Prompt for new command and to continue previous command: 
+  ```postgres
+  gamesdb=> 
+  gamesdb->
+  ```
+
+### 4. GraphQL healthckeck queries 
 
 
