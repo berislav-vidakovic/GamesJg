@@ -271,3 +271,44 @@
       }
     }
     ```
+
+- Add pingDb query
+  - Extend GraphQL schema definition
+  - Add Model and Repository
+  - Add Controller
+  - Test from Postman as POST with JSON body:
+    ```json
+    {
+      "query": "{ pingDb }"
+    }
+    ```
+    - Response expected 
+      - Row exists:
+        ```json
+        {
+          "data": {
+            "pingDb": "Hello world from PostgreSQL!"
+          }
+        }
+        ```
+      - No row exists:
+        ```json
+        {
+          "data": {
+            "pingDb": null
+          }
+        }
+        ```
+      - Database Error:
+        ```json
+        {
+          "errors": [
+            {
+              "message": "Database connection failed",
+              "locations": [ ... ],
+              "path": ["pingDb"]
+            }
+          ]
+        }
+        ```
+
