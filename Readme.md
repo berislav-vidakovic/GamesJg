@@ -9,6 +9,12 @@
 <img src = "docs/graphql.png" style="height:35px; margin-right: 15px;" /> 
 </div>
 
+
+This project uses Spring Boot GraphQL.
+A Hasura-based implementation is planned to compare backend-managed vs database-driven GraphQL architectures.
+
+
+
 ### Table of Content
 
 1. [Build project skeleton](#1-build-project-skeleton)
@@ -305,7 +311,7 @@
           "errors": [
             {
               "message": "Database connection failed",
-              "locations": [ ... ],
+              "locations": [...],
               "path": ["pingDb"]
             }
           ]
