@@ -21,6 +21,8 @@ A Hasura-based implementation is planned to compare backend-managed vs database-
 2. [Install PostgreSQL, create DB and connect backend](#2-install-postgresql-create-db-and-connect-backend)
 3. [Run PostgreSQL scripts to create and populate table](#3-run-postgresql-scripts-to-create-and-populate-table)
 4. [GraphQL healthcheck queries](#4-graphql-healthckeck-queries)
+5. [GraphQL fetch all users query](#5-graphql-fetch-all-users-query)
+
 
 
 ### 1. Build project skeleton
@@ -147,7 +149,7 @@ A Hasura-based implementation is planned to compare backend-managed vs database-
   ```bash
   psql -h barryonweb.com -p 5432 -U barry75 -d gamesdb
   ```
-
+C:\MyProjects\GamesJg\src\main\resources\data.sql
 - Add connection to backend application.yaml (under spring key)
   ```yaml
   datasource:
@@ -318,3 +320,30 @@ A Hasura-based implementation is planned to compare backend-managed vs database-
         }
         ```
 
+
+### 5. GraphQL fetch all users query
+
+- Extend schema.graphqls
+  ```graphql
+  type Query {
+    ...
+    usersOverview: UsersOverview
+  }
+
+  type UsersOverview {
+    id: ID!
+    users: [User!]!
+    techstack: [String!]!
+  }
+
+  type User {
+    userId: ID!
+    login: String!
+    fullName: String
+    isOnline: Boolean!
+  }
+  ```
+
+- Create UsersOverview DTO
+
+- Create Controller 
